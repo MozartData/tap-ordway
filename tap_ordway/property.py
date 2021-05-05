@@ -36,3 +36,14 @@ def get_stream_metadata(tap_stream_id, schema_dict) -> List:
         key_properties=get_key_properties(tap_stream_id),
         valid_replication_keys=stream_def.valid_replication_keys,
     )
+
+
+def get_fivetran_primary_key(tap_stream_id: str) -> Optional[List[str]]:
+    """Retrieves a stream's fivetran primary key"""
+
+    fivetran_primary_key = AVAILABLE_STREAMS[tap_stream_id].fivetran_primary_key
+
+    if len(fivetran_primary_key) == 0:  # type: ignore
+        return None
+
+    return fivetran_primary_key  # type: ignore
