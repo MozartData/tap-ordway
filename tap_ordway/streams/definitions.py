@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Sequence, Type, Union
+
 from singer import get_logger
+
 from ..api import RequestHandler
 from ..transformers import (
     BillingScheduleTransformer,
@@ -27,6 +29,7 @@ class BillingRuns(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/billing_runs", sort="name")
+    fivetran_primary_key = ["billing_run_id"]
 
 
 class BillingSchedules(Stream):
@@ -42,6 +45,7 @@ class BillingSchedules(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = BillingScheduleTransformer
     request_handler = RequestHandler("/billing_schedules", sort="id")
+    fivetran_primary_key = ["billing_schedules_id"]
 
 
 class Credits(Stream):
@@ -54,6 +58,7 @@ class Credits(Stream):
     key_properties = ["credit_id", "company_id"]
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/credits", sort="updated_date,id")
+    fivetran_primary_key = ["credits_id"]
 
 
 class Contacts(ResponseSubstream):
@@ -69,6 +74,7 @@ class Contacts(ResponseSubstream):
     replication_method = "FULL_TABLE"
     path = ("contacts",)
     transformer_class = RecordTransformer
+    fivetran_primary_key = ["contacts_id"]
 
 
 class PaymentMethods(EndpointSubstream):
@@ -81,6 +87,7 @@ class PaymentMethods(EndpointSubstream):
     replication_method = "FULL_TABLE"
     request_handler = RequestHandler("/customers/{id}/payment_methods")
     transformer_class = RecordTransformer
+    fivetran_primary_key = ["payment_method_id"]
 
 
 class CustomerNotes(EndpointSubstream):
@@ -96,6 +103,7 @@ class CustomerNotes(EndpointSubstream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/customers/{id}/customer_notes")
+    fivetran_primary_key = ["customer_note_id"]
 
 
 # INCREMENTAL is allowed if substreams aren't selected.
@@ -112,6 +120,7 @@ class Customers(Stream):
     transformer_class = CustomerTransformer
     request_handler = RequestHandler("/customers")
     substream_definitions = [Contacts, CustomerNotes, PaymentMethods]
+    fivetran_primary_key = ["customer_id"]
 
 
 class Invoices(Stream):
@@ -124,6 +133,7 @@ class Invoices(Stream):
     key_properties = ["invoice_id", "company_id", "invoice_line_no"]
     transformer_class = InvoiceTransformer
     request_handler = RequestHandler("/invoices", sort="updated_date,id")
+    fivetran_primary_key = ["invoice_id"]
 
 
 class Orders(Stream):
@@ -136,6 +146,7 @@ class Orders(Stream):
     key_properties = ["order_id", "company_id", "order_line_no"]
     transformer_class = OrderTransformer
     request_handler = RequestHandler("/orders", sort="updated_date,id")
+    fivetran_primary_key = ["order_id"]
 
 
 class Payments(Stream):
@@ -148,6 +159,7 @@ class Payments(Stream):
     key_properties = ["payment_id", "company_id"]
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/payments", sort="updated_date,id")
+    fivetran_primary_key = ["payment_id"]
 
 
 class Products(Stream):
@@ -160,6 +172,7 @@ class Products(Stream):
     key_properties = ["product_id", "company_id"]
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/products", sort="updated_date,id")
+    fivetran_primary_key = ["product_id"]
 
 
 class Refunds(Stream):
@@ -169,6 +182,7 @@ class Refunds(Stream):
     key_properties = ["refund_id", "company_id"]
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/refunds", sort="updated_date,id")
+    fivetran_primary_key = ["refund_id"]
 
 
 class RevenueSchedules(Stream):
@@ -183,6 +197,7 @@ class RevenueSchedules(Stream):
     request_handler = RequestHandler(
         "/revenue_schedules", page_size=500, sort="updated_date,id"
     )
+    fivetran_primary_key = ["revenue_schedule_id"]
 
 
 class Subscriptions(Stream):
@@ -196,6 +211,7 @@ class Subscriptions(Stream):
     transformer_class = SubscriptionTransformer
     replication_method = "INCREMENTAL"
     request_handler = RequestHandler("/subscriptions", sort="updated_date,id")
+    fivetran_primary_key = ["subscription_id"]
 
 
 class Charges(ResponseSubstream):
@@ -211,6 +227,7 @@ class Charges(ResponseSubstream):
     replication_method = "FULL_TABLE"
     path = ("charges",)
     transformer_class = RecordTransformer
+    fivetran_primary_key = ["charge_id"]
 
 
 class Plans(Stream):
@@ -227,6 +244,7 @@ class Plans(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/plans")
+    fivetran_primary_key = ["plan_id"]
 
 
 class PaymentRuns(Stream):
@@ -242,6 +260,7 @@ class PaymentRuns(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/payment_runs")
+    fivetran_primary_key = ["payment_run_id"]
 
 
 class RevenueRules(Stream):
@@ -257,6 +276,7 @@ class RevenueRules(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/revenue_rules", sort=None)
+    fivetran_primary_key = ["revenue_rule_id"]
 
 
 class ChartOfAccounts(Stream):
@@ -272,10 +292,11 @@ class ChartOfAccounts(Stream):
     replication_method = "FULL_TABLE"
     transformer_class = RecordTransformer
     request_handler = RequestHandler("/chart_of_accounts", sort=None)
+    fivetran_primary_key = ["code"]
 
 
 class Webhooks(Stream):
-    """Webhooks stream """
+    """Webhooks stream"""
 
     tap_stream_id = "webhooks"
     key_properties = ["name", "company_id"]

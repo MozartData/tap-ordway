@@ -2,6 +2,7 @@
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 import json
 import os
+from collections import defaultdict
 from _datetime import datetime
 from singer import get_logger
 from singer.bookmarks import set_currently_syncing, write_bookmark
@@ -12,6 +13,7 @@ from singer.utils import handle_top_exception, parse_args, strptime_to_utc
 import tap_ordway.configs as TAP_CONFIG
 from .api.consts import DEFAULT_API_VERSION
 from .property import (
+    get_fivetran_primary_key,
     get_key_properties,
     get_replication_key,
     get_replication_method,
@@ -247,8 +249,13 @@ def sync(config: Dict[str, Any], state: Dict[str, Any], catalog: Catalog) -> Non
         stream_def = stream_defs[stream.tap_stream_id]
 
         LOGGER.info("Querying since: %s", filter_datetime)
-
+        records_for_fivetran = defaultdict(list)
+        schema_for_fivetran = {}
         for tap_stream_id, record in stream_def.sync(filter_datetime):  # type: ignore
+            records_for_fivetran[tap_stream_id].append(record)
+            schema_for_fivetran[tap_stream_id] = {
+                "primary_key": get_fivetran_primary_key(tap_stream_id)
+            }
             state = handle_record(
                 tap_stream_id,
                 record,
@@ -261,6 +268,15 @@ def sync(config: Dict[str, Any], state: Dict[str, Any], catalog: Catalog) -> Non
 
     state = set_currently_syncing(state, None)
     write_state(state)
+    response = {
+        "schema": schema_for_fivetran,
+        "insert": records_for_fivetran,
+        "state": {},
+        "hasMore": False,
+    }
+    print("*********************")
+    print(response)
+    return response
 
 
 def set_global_config(config: Dict[str, Any]) -> None:
